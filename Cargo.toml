@@ -1,0 +1,7 @@
+[package]
+name = "snake"
+version = "0.1.0"
+authors = ["aligator <aligator@suncraft-server.de>"]
+
+[dependencies]
+ncurses = "5.86.0"
