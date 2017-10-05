@@ -18,7 +18,7 @@ fn main() {
     // setup ncurses
     let bounds = init();
 
-    let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 10).expect("Illegal sizes");
+    let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 10).expect("Illegal sizes");
 
     draw_field(&field);
 
@@ -62,7 +62,7 @@ fn main() {
             _ => None
         };
 
-        if (dir.is_some()) {
+        if dir.is_some() {
             last = dir.clone();
         }
 
@@ -88,11 +88,12 @@ fn draw_field(field: &Field<char>) {
             mvaddch(y as i32, x as i32, item as chtype);
         }
     }
-
+/*
     for ((x, y), chr) in field.get_snake_with_chars() {
         mvaddch(y as i32, x as i32, chr as chtype);
     }
-
+    
+  */  
 }
 
 fn update(points: LinkedList<(logic::field::Point, char)>) {

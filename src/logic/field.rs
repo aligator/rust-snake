@@ -1,5 +1,8 @@
+extern crate rand;
+
 use logic::snake::Snake;
 use std::collections::LinkedList;
+use logic::field::rand::distributions::IndependentSample;
 
 #[derive(Copy, Debug)]
 pub enum Direction {
@@ -18,14 +21,16 @@ pub struct Field<T:Clone> {
     default_val: T,
     snake_val: T,
     head_val: T,
+    cookie_val: T,
     width: usize,
     height: usize,
-    snake: Snake
+    snake: Snake,
+    cookie: Point
 }
 
 impl<T:Clone> Field<T> {
 
-    pub fn new(width: usize, height: usize, default_val: T, snake_val: T, head_val: T, snake_size: usize) -> Option<Field<T>> {
+    pub fn new(width: usize, height: usize, default_val: T, snake_val: T, head_val: T, cookie_val: T, snake_size: usize) -> Option<Field<T>> {
 
         let start_x = width / 2 - snake_size / 2;
         let start_y = height / 2;
@@ -41,9 +46,11 @@ impl<T:Clone> Field<T> {
             default_val: default_val.clone(),
             snake_val: snake_val.clone(),
             head_val: head_val.clone(),
+            cookie_val: cookie_val.clone(),
             width: width,
             height: height,
             snake: snake,
+            cookie: (0, 0),
         })
     }
 
@@ -68,7 +75,16 @@ impl<T:Clone> Field<T> {
     }
 
     pub fn get_field(&self) -> &Vec<Vec<T>> {
-        &self.field
+        let mut field = &self.field.clone();
+        for (point, chr) in self.get_snake_with_chars() {
+			let p = Util::limitPoint(point, self.width, self.height);
+            field[p.1][p.0] = chr;
+        }
+		
+		let p = Util::limitPoint(self.cookie, self.width, self.height);
+        field[p.1][p.0] = self.cookie_val.clone();
+		
+        field
     }
 
     pub fn get_snake(&self) -> &Snake {
@@ -80,17 +96,22 @@ impl<T:Clone> Field<T> {
     }
 
     pub fn set_point(&mut self, x:usize, y:usize, data: T) {
-        let x: usize = Util::limit(x, 0, self.width);
-        let y: usize = Util::limit(y, 0, self.height);
-
-        self.field[y][x] = data;
+        let p = Util::limitPoint((x, y), self.width, self.height);
+        
+        self.field[p.1][p.0] = data;
     }
 
     pub fn get_point(&self, x:usize, y:usize) -> &T {
-        let x = Util::limit(x, 0, self.width);
-        let y = Util::limit(y, 0, self.height);
+        let p = Util::limitPoint((x, y), self.width, self.height);
 
-        &self.field[y][x]
+        &self.field[p.1][p.0]
+    }
+
+    fn newCookie(&mut self) {
+        let x_rng = rand::distributions::Range::new(0, self.width);
+        let y_rng = rand::distributions::Range::new(0, self.height);
+        let mut rng = rand::thread_rng();
+        self.cookie = (x_rng.ind_sample(&mut rng), y_rng.ind_sample(&mut rng));
     }
 
     pub fn mov(&mut self, dir: Option<Direction>) -> Option<LinkedList<(Point, T)>> {
@@ -120,7 +141,7 @@ impl<T:Clone> Field<T> {
 
     }
 
-    pub fn get_snake_with_chars(&self) -> LinkedList<(Point, T)> {
+    fn get_snake_with_chars(&self) -> LinkedList<(Point, T)> {
 
         let mut snake: LinkedList<(Point, T)> = LinkedList::new();
         for &item in self.snake.get_points() {
@@ -145,6 +166,13 @@ mod Util {
             val
         }
     }
+	
+	pub fn limitPoint(point: super::Point, width: usize, height: usize) -> super::Point {
+		let x = limit(point.0, 0, width);
+        let y = limit(point.1, 0, height);
+		
+		(x, y)
+	}
 }
 
 
