@@ -40,8 +40,8 @@ impl<T:Clone> Field<T> {
         if snake.get_head().0 >= width {
             return None;
         }
-
-        Some(Field {
+		
+		let mut field = Field {
             field: vec![vec![default_val.clone(); width as usize]; height as usize],
             default_val: default_val.clone(),
             snake_val: snake_val.clone(),
@@ -51,7 +51,11 @@ impl<T:Clone> Field<T> {
             height: height,
             snake: snake,
             cookie: (0, 0),
-        })
+        };
+		
+		field.newCookie();
+		
+        Some(field)
     }
 
     pub fn get_width(&self) -> usize {
@@ -74,8 +78,8 @@ impl<T:Clone> Field<T> {
         &self.head_val
     }
 
-    pub fn get_field(&self) -> &Vec<Vec<T>> {
-        let mut field = &self.field.clone();
+    pub fn get_field(&self) -> Vec<Vec<T>> {
+        let mut field = self.field.clone();
         for (point, chr) in self.get_snake_with_chars() {
 			let p = Util::limitPoint(point, self.width, self.height);
             field[p.1][p.0] = chr;
@@ -133,7 +137,12 @@ impl<T:Clone> Field<T> {
             to_update.push_front((old_tail, self.default_val.clone()));
             to_update.push_front((old_front, self.snake_val.clone()));
             to_update.push_front((*self.snake.get_points().front().expect("There is no snake."), self.head_val.clone()));
-
+			
+			if *self.snake.get_head() == self.cookie {
+				self.newCookie();
+				to_update.push_front((self.cookie, self.cookie_val.clone()));
+			}
+			
             Some(to_update)
         } else {
             None
