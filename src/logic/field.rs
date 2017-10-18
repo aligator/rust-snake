@@ -15,7 +15,6 @@ impl Clone for Direction {
 
 pub type Point = (usize, usize); // Positions of the snake-parts (x, y)
 
-
 pub struct Field<T:Clone> {
     field: Vec<Vec<T>>,
     default_val: T,
@@ -28,6 +27,7 @@ pub struct Field<T:Clone> {
     cookie: Point
 }
 
+#[allow(dead_code)]
 impl<T:Clone> Field<T> {
 
     pub fn new(width: usize, height: usize, default_val: T, snake_val: T, head_val: T, cookie_val: T, snake_size: usize) -> Option<Field<T>> {
@@ -53,7 +53,7 @@ impl<T:Clone> Field<T> {
             cookie: (0, 0),
         };
 		
-		field.newCookie();
+		field.new_cookie();
 		
         Some(field)
     }
@@ -81,11 +81,11 @@ impl<T:Clone> Field<T> {
     pub fn get_field(&self) -> Vec<Vec<T>> {
         let mut field = self.field.clone();
         for (point, chr) in self.get_snake_with_chars() {
-			let p = Util::limitPoint(point, self.width, self.height);
+			let p = util::limit_point(point, self.width, self.height);
             field[p.1][p.0] = chr;
         }
 		
-		let p = Util::limitPoint(self.cookie, self.width, self.height);
+		let p = util::limit_point(self.cookie, self.width, self.height);
         field[p.1][p.0] = self.cookie_val.clone();
 		
         field
@@ -100,18 +100,18 @@ impl<T:Clone> Field<T> {
     }
 
     pub fn set_point(&mut self, x:usize, y:usize, data: T) {
-        let p = Util::limitPoint((x, y), self.width, self.height);
+        let p = util::limit_point((x, y), self.width, self.height);
         
         self.field[p.1][p.0] = data;
     }
 
     pub fn get_point(&self, x:usize, y:usize) -> &T {
-        let p = Util::limitPoint((x, y), self.width, self.height);
+        let p = util::limit_point((x, y), self.width, self.height);
 
         &self.field[p.1][p.0]
     }
 
-    fn newCookie(&mut self) {
+    fn new_cookie(&mut self) {
         let x_rng = rand::distributions::Range::new(0, self.width);
         let y_rng = rand::distributions::Range::new(0, self.height);
         let mut rng = rand::thread_rng();
@@ -133,17 +133,21 @@ impl<T:Clone> Field<T> {
         };
 
         if move_ok {
+		
+			
+		
             let mut to_update: LinkedList<(Point, T)> = LinkedList::new();
             to_update.push_front((old_tail, self.default_val.clone()));
-            to_update.push_front((old_front, self.snake_val.clone()));
+            to_update.push_front((old_front, self.snake_val.clone()));			
             to_update.push_front((*self.snake.get_points().front().expect("There is no snake."), self.head_val.clone()));
-			
+						
 			if *self.snake.get_head() == self.cookie {
-				self.newCookie();
+				self.new_cookie();
+				self.snake.grow();
 				to_update.push_front((self.cookie, self.cookie_val.clone()));
 			}
 			
-            Some(to_update)
+			Some(to_update)
         } else {
             None
         }
@@ -157,7 +161,7 @@ impl<T:Clone> Field<T> {
             snake.push_front((item, self.snake_val.clone()));
         }
 
-        let (head, tmp) = snake.pop_back().expect("There is no snake.");
+        let (head, _) = snake.pop_back().expect("There is no snake.");
 
         snake.push_back((head, self.head_val.clone()));
 
@@ -165,7 +169,7 @@ impl<T:Clone> Field<T> {
     }
 }
 
-mod Util {
+mod util {
     pub fn limit<L:PartialOrd>(val: L, min: L, max: L) -> L {
         if val < min {
             min
@@ -176,7 +180,7 @@ mod Util {
         }
     }
 	
-	pub fn limitPoint(point: super::Point, width: usize, height: usize) -> super::Point {
+	pub fn limit_point(point: super::Point, width: usize, height: usize) -> super::Point {
 		let x = limit(point.0, 0, width);
         let y = limit(point.1, 0, height);
 		

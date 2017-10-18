@@ -4,7 +4,9 @@ use logic::field::Point;
 pub struct Snake {
     points: LinkedList<Point>,
     last_x: i32,
-    last_y: i32
+    last_y: i32,
+	neck_point: Option<Point>,
+	grow_point: Option<Point>
 }
 
 impl Snake {
@@ -19,10 +21,21 @@ impl Snake {
         Snake {
             points: points,
             last_x: last_x,
-            last_y: last_y
+            last_y: last_y,
+			neck_point: None,
+			grow_point: None
         }
     }
 
+	pub fn grow(&mut self) {
+		
+		self.grow_point = self.neck_point;
+				
+		
+		//println!("{:?}", self.neck_point);
+		//println!("{:?}", *self.get_head());
+	}
+	
     pub fn move_left(&mut self, width: i32, height: i32) -> bool { self.mov(-1, 0, width, height) }
 
     pub fn move_right(&mut self, width: i32, height: i32) -> bool {
@@ -46,6 +59,19 @@ impl Snake {
     *
     */
     fn mov(&mut self, x: i32,  y: i32, width: i32, height: i32) -> bool {
+		{
+			let mut iter = self.points.iter();
+			iter.next(); // ignore head
+			
+			
+			
+			match iter.next() {// get seccond element
+				Some(p) => self.neck_point = Some(*p),
+				None => ()
+			}
+		
+		}
+		
         let (old_x, old_y) = *self.get_head();
 
         let x = if x == 0 && y == 0
@@ -78,7 +104,18 @@ impl Snake {
 
 
         self.points.push_front(new_pos);
-        self.points.pop_back();
+		
+		// grow 
+		match self.grow_point {
+			Some(p) => {
+				if p == *self.get_tail() {
+					self.grow_point = None;
+				} else {
+					self.points.pop_back();
+				}
+			},
+			None => {self.points.pop_back();},
+		}
 
         self.last_x = x;
         self.last_y = y;
@@ -92,6 +129,15 @@ impl Snake {
 
     pub fn get_head(&self) -> &Point {
         match self.points.front() {
+            Some(i) => i,
+            None => {
+                panic!("Length of the snake is 0");
+            }
+        }
+    }
+	
+	pub fn get_tail(&self) -> &Point {
+        match self.points.back() {
             Some(i) => i,
             None => {
                 panic!("Length of the snake is 0");

@@ -14,11 +14,12 @@ struct Bounds {
     row: i32
 }
 
+#[allow(while_true)]
 fn main() {
     // setup ncurses
     let bounds = init();
 
-    let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 10).expect("Illegal sizes");
+    let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 5).expect("Illegal sizes");
 
     draw_field(&field);
 
