@@ -115,7 +115,19 @@ impl<T:Clone> Field<T> {
         let x_rng = rand::distributions::Range::new(0, self.width);
         let y_rng = rand::distributions::Range::new(0, self.height);
         let mut rng = rand::thread_rng();
-        self.cookie = (x_rng.ind_sample(&mut rng), y_rng.ind_sample(&mut rng));
+				
+		loop {
+			let x = x_rng.ind_sample(&mut rng);
+			let y = y_rng.ind_sample(&mut rng);
+			
+			if !self.snake.contains(x, y) { 
+				self.cookie = (x, y);
+				break;
+			}
+		}
+
+		
+        
     }
 
     pub fn mov(&mut self, dir: Option<Direction>) -> Option<LinkedList<(Point, T)>> {

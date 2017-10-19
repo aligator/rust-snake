@@ -30,13 +30,11 @@ impl Snake {
 	pub fn grow(&mut self) {
 		
 		self.grow_point = self.neck_point;
-				
-		
-		//println!("{:?}", self.neck_point);
-		//println!("{:?}", *self.get_head());
 	}
 	
-    pub fn move_left(&mut self, width: i32, height: i32) -> bool { self.mov(-1, 0, width, height) }
+    pub fn move_left(&mut self, width: i32, height: i32) -> bool {
+		self.mov(-1, 0, width, height) 
+	}
 
     pub fn move_right(&mut self, width: i32, height: i32) -> bool {
         self.mov(1, 0, width, height)
@@ -122,6 +120,10 @@ impl Snake {
 
         return true;
     }
+	
+	pub fn contains(&self, x: usize, y: usize) -> bool {
+		self.points.contains(&(x, y))
+	}
 
     pub fn get_points(&self) -> &LinkedList<Point> {
         &self.points
