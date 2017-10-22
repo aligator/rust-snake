@@ -18,7 +18,7 @@ struct Bounds {
 fn main() {
     // setup ncurses
     let bounds = init();
-    let mut score = 0;
+    let mut score: i32 = 0;
 
     let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 5).expect("Illegal sizes");
 
@@ -46,7 +46,9 @@ fn main() {
 
     while !end
     {
-        thread::sleep(time::Duration::from_millis(300));
+        let speed: u64 = 200 - score as u64 * 2;
+        let speed: u64 = if speed < 150 {150} else {speed};
+        thread::sleep(time::Duration::from_millis(speed));
 
         let ch = ch.try_lock();
 
