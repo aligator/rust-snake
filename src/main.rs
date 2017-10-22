@@ -18,6 +18,7 @@ struct Bounds {
 fn main() {
     // setup ncurses
     let bounds = init();
+    let mut score = 0;
 
     let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 5).expect("Illegal sizes");
 
@@ -45,7 +46,7 @@ fn main() {
 
     while !end
     {
-        thread::sleep(time::Duration::from_millis(100));
+        thread::sleep(time::Duration::from_millis(300));
 
         let ch = ch.try_lock();
 
@@ -71,12 +72,18 @@ fn main() {
             dir = last.clone();
         }
 
-        let to_update = field.mov(dir);
+        let (to_update, scored) = field.mov(dir);
+
+        if scored {
+            score += 1;
+        }
 
         match to_update {
-            Some(t) => update(t),
+            Some(t) => update(t, score),
             None => {if dir.is_some() {end = true;}}
         }
+
+
     }
 
     endwin();
@@ -93,16 +100,17 @@ fn draw_field(field: &Field<char>) {
     for ((x, y), chr) in field.get_snake_with_chars() {
         mvaddch(y as i32, x as i32, chr as chtype);
     }
-    
-  */  
+
+  */
 }
 
-fn update(points: LinkedList<(logic::field::Point, char)>) {
+fn update(points: LinkedList<(logic::field::Point, char)>, score: i32) {
     for (point, chr) in points {
         mvaddch(point.1 as i32, point.0 as i32, chr as chtype);
 
     }
-
+    let score: &str = &score.to_string()[0..];
+    mvprintw(0, 0, score);
     refresh();
 }
 

@@ -130,12 +130,12 @@ impl<T:Clone> Field<T> {
         
     }
 
-    pub fn mov(&mut self, dir: Option<Direction>) -> Option<LinkedList<(Point, T)>> {
+    pub fn mov(&mut self, dir: Option<Direction>) -> (Option<LinkedList<(Point, T)>>, bool) {
 
         let old_tail = *self.snake.get_points().back().expect("There is no snake.");
         let old_front = *self.snake.get_points().front().expect("There is no snake.");
 
-        let move_ok = match dir {
+        let (move_ok, score) = match dir {
 
             Some(Direction::LEFT) => self.snake.move_left(self.width as i32, self.height as i32),
             Some(Direction::RIGHT) => self.snake.move_right(self.width as i32, self.height as i32),
@@ -159,9 +159,9 @@ impl<T:Clone> Field<T> {
 				to_update.push_front((self.cookie, self.cookie_val.clone()));
 			}
 			
-			Some(to_update)
+            (Some(to_update), score)
         } else {
-            None
+            (None, score)
         }
 
     }

@@ -6,13 +6,15 @@ pub struct Snake {
     last_x: i32,
     last_y: i32,
 	neck_point: Option<Point>,
-	grow_point: Option<Point>
+	grow_points: Vec<Point>
 }
 
 impl Snake {
 
     pub fn new(init_length: usize, pos_tail: Point, last_x: i32, last_y: i32) -> Snake {
         let mut points: LinkedList<Point> = LinkedList::new();
+
+        let init_length = if init_length < 3 {3} else {init_length};
 
         for i in 0..(init_length) {
             points.push_front((pos_tail.0 + i, pos_tail.1));
@@ -23,52 +25,43 @@ impl Snake {
             last_x: last_x,
             last_y: last_y,
 			neck_point: None,
-			grow_point: None
+			grow_points: Vec::new()
         }
     }
 
 	pub fn grow(&mut self) {
-		
-		self.grow_point = self.neck_point;
+		match self.neck_point {
+            Some(p) => self.grow_points.push(p),
+            None => ()
+        }
 	}
 	
-    pub fn move_left(&mut self, width: i32, height: i32) -> bool {
+    pub fn move_left(&mut self, width: i32, height: i32) -> (bool, bool) {
 		self.mov(-1, 0, width, height) 
 	}
 
-    pub fn move_right(&mut self, width: i32, height: i32) -> bool {
+    pub fn move_right(&mut self, width: i32, height: i32) -> (bool, bool) {
         self.mov(1, 0, width, height)
     }
 
-    pub fn move_up(&mut self, width: i32, height: i32) -> bool {
+    pub fn move_up(&mut self, width: i32, height: i32) -> (bool, bool) {
         self.mov(0, -1, width, height)
     }
 
-    pub fn move_down(&mut self, width: i32, height: i32) -> bool {
+    pub fn move_down(&mut self, width: i32, height: i32) -> (bool, bool) {
         self.mov(0, 1, width, height)
     }
 
-    pub fn move_last(&mut self, width: i32, height: i32) -> bool {
+    pub fn move_last(&mut self, width: i32, height: i32) -> (bool, bool) {
         self.mov(0, 0, width, height)
     }
 
     /**
     * if x and y are 0, the last direction is used
-    *
+    * (bool, bool) => (move_ok, scored)
     */
-    fn mov(&mut self, x: i32,  y: i32, width: i32, height: i32) -> bool {
-		{
-			let mut iter = self.points.iter();
-			iter.next(); // ignore head
-			
-			
-			
-			match iter.next() {// get seccond element
-				Some(p) => self.neck_point = Some(*p),
-				None => ()
-			}
-		
-		}
+    fn mov(&mut self, x: i32,  y: i32, width: i32, height: i32) -> (bool, bool) {
+        self.neck_point = Some(*self.get_head());
 		
         let (old_x, old_y) = *self.get_head();
 
@@ -82,7 +75,7 @@ impl Snake {
         let y: i32 = (old_y) as i32 +y;
 
         if x < 0 || y < 0 {
-            return false;
+            return (false, false);
         }
 
 
@@ -90,35 +83,41 @@ impl Snake {
 
         // check for border
         if x >= width || y >= height {
-            return false;
+            return (false, false);
         }
 
         let new_pos = (x as usize, y as usize);
 
         // check for self-crash
         if self.get_points().contains(&new_pos) {
-            return false;
+            return (false, false);
         }
 
 
         self.points.push_front(new_pos);
-		
-		// grow 
-		match self.grow_point {
-			Some(p) => {
-				if p == *self.get_tail() {
-					self.grow_point = None;
-				} else {
-					self.points.pop_back();
-				}
-			},
-			None => {self.points.pop_back();},
-		}
+
+        let mut do_pop_back = true;
+        let mut to_remove: Option<usize> = None;
+		// grow
+        for (i, p) in self.grow_points.iter().enumerate() {
+
+            if *p == *self.get_tail() {
+
+                to_remove = Some(i);
+                do_pop_back = false;
+                break; // there can only be one
+            }
+        }
+
+
+        if do_pop_back {self.points.pop_back();}
+
+        let score = match to_remove { Some(i) => {self.grow_points.remove(i); true}, None => false};
 
         self.last_x = x;
         self.last_y = y;
 
-        return true;
+        return (true, score);
     }
 	
 	pub fn contains(&self, x: usize, y: usize) -> bool {
