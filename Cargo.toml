@@ -4,5 +4,5 @@ version = "0.1.0"
 authors = ["aligator <aligator@suncraft-server.de>"]
 
 [dependencies]
-ncurses = "5.86.0"
+crossterm = "0.9.5"
 rand = "0.3.16"
