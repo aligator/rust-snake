@@ -12,24 +12,43 @@ use logic::field::Field;
 mod logic;
 
 struct Bounds {
-    col: i32,
-    row: i32
+    col: u16,
+    row: u16
+}
+
+struct Term {
+    crossterm: Crossterm,
+    screen: RawScreen,
+    cursor: TerminalCursor,
+    input: TerminalInput,
+    terminal: Terminal,
+}
+
+impl Term {
+    fn new() -> Term {
+        Term {
+            crossterm: Crossterm::new(),
+            screen: RawScreen::into_raw_mode().unwrap(),
+            cursor: crossterm::cursor(),
+            input: crossterm::input(),
+            terminal: crossterm::terminal(),
+        }
+    }
 }
 
 fn main() {
-    // setup crossterm
-    let crossterm = Crossterm::new();
-    let screen = RawScreen::into_raw_mode();
-    let terminal = crossterm.terminal();
-    let mut input = crossterm.input();
+    let mut term: Term = Term::new();
+
+    let bounds = init(&mut term);
 
     // setup field
-    let bounds = init();
     let mut score: i32 = 0;
     let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 5).expect("Illegal sizes");
-    draw_field(&field);
+    draw_field(&field, &term.cursor);
+
 
     // input-loop
+    let input = term.input; // prevent move of term into closure
     let ch = Arc::new(Mutex::new(KeyEvent::Delete));
     {
         let ch = Arc::clone(&ch);
@@ -59,7 +78,7 @@ fn main() {
 
     let mut end = false;
 
-    let mut last: Option<char> = None;
+    let mut last: Option<Direction> = None;
 
     while !end
     {
@@ -73,19 +92,15 @@ fn main() {
             Ok(m) => {
                 match *m {
                     KeyEvent::Left => {
-                        println!("left");
                         Some(Direction::LEFT)
                     },
                     KeyEvent::Right => {
-                        println!("right");
                         Some(Direction::RIGHT)
                     },
                     KeyEvent::Up => {
-                        println!("up");
                         Some(Direction::UP)
                     },
                     KeyEvent::Down => {
-                        println!("down");
                         Some(Direction::DOWN)
                     },
                     _ => None
@@ -94,77 +109,59 @@ fn main() {
             },
             _ => None
         };
-        /*
-                if dir.is_some() {
-                    last = dir.clone();
-                }
 
-                if dir.is_none() {
-                    dir = last.clone();
-                }
+        if dir.is_some() {
+            last = dir.clone();
+        }
 
-                let (to_update, scored) = field.mov(dir);
+        if dir.is_none() {
+            dir = last.clone();
+        }
 
-                if scored {
-                    score += 1;
-                }
+        let (to_update, scored) = field.mov(dir);
 
-                match to_update {
-                    Some(t) => update(t, score),
-                    None => {if dir.is_some() {end = true;}}
-                }
-                */
+        if scored {
+            score += 1;
+        }
 
+        match to_update {
+            Some(t) => update(t, score, &term.cursor),
+            None => { if dir.is_some() { end = true; } }
+        }
     }
-
-    //endwin();
 }
 
-fn draw_field(field: &Field<char>) {
+fn draw_field(field: &Field<char>, cursor: &TerminalCursor) {
     for (y, col) in field.get_field().iter().enumerate() {
         for (x, item) in col.iter().enumerate() {
             let item = *item;
-            //mvaddch(y as i32, x as i32, item as chtype);
+            cursor.goto(x as u16, y as u16);
+            print!("{}", item);
         }
     }
-/*
-    for ((x, y), chr) in field.get_snake_with_chars() {
-        mvaddch(y as i32, x as i32, chr as chtype);
-    }
-
-  */
 }
 
-fn update(points: LinkedList<(logic::field::Point, char)>, score: i32) {
+fn update(points: LinkedList<(logic::field::Point, char)>, score: i32, cursor: &TerminalCursor) {
     for (point, chr) in points {
-        //mvaddch(point.1 as i32, point.0 as i32, chr as chtype);
-
+        cursor.goto(point.0 as u16, point.1 as u16);
+        print!("{}", chr);
     }
     let score: &str = &score.to_string()[0..];
-    //mvprintw(0, 0, score);
-    //refresh();
+    cursor.goto(0, 0);
+    print!("{}", score);
 }
 
-fn init() -> Bounds {
-    /*let locale_conf = LcCategory::all;
-    setlocale(locale_conf, "de_DE.UTF-8");
+fn init(term: &mut Term) -> Bounds {
 
-    let window = initscr();
-    raw();
-    keypad(stdscr(), true);
-    noecho();
+    // setup crossterm
+    term.cursor.hide();
+    term.terminal.clear(ClearType::All);
 
-    start_color();
-    cbreak();
-    curs_set(CURSOR_VISIBILITY::CURSOR_INVISIBLE);
+    let (width, height) = term.terminal.terminal_size();
+    let bounds = Bounds {
+        col: width,
+        row: height,
+    };
 
-    Bounds {
-        col: getmaxx(window),
-        row: getmaxy(window)
-    }*/
-
-    Bounds {
-        col: 100,
-        row: 100
-    }
+    return bounds
 }
