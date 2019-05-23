@@ -1,7 +1,7 @@
 mod logic;
-extern crate ncurses;
+extern crate crossterm;
 
-use ncurses::*;
+use crossterm::*;
 use logic::field::Field;
 use logic::field::Direction;
 use std::collections::LinkedList;
