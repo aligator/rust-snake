@@ -17,7 +17,6 @@ struct Bounds {
 }
 
 struct Term {
-    crossterm: Crossterm,
     screen: RawScreen,
     cursor: TerminalCursor,
     input: TerminalInput,
@@ -26,8 +25,9 @@ struct Term {
 
 impl Term {
     fn new() -> Term {
+        let crossterm = Crossterm::new();
+
         Term {
-            crossterm: Crossterm::new(),
             screen: RawScreen::into_raw_mode().unwrap(),
             cursor: crossterm::cursor(),
             input: crossterm::input(),
@@ -62,10 +62,10 @@ fn main() {
                 if let Some(key_event) = stdin.next() {
                     match key_event {
                         InputEvent::Keyboard(event) => {
-                            let new_keyEvent = event;
+                            let new_key_event = event;
 
                             let mut ch_ptr = ch.lock().unwrap();
-                            *ch_ptr = new_keyEvent;
+                            *ch_ptr = new_key_event;
                         },
                         _ => {}
                     }
