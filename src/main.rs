@@ -49,7 +49,7 @@ fn main() {
     let bounds = init(&mut term);
 
     // setup field
-    let mut score: i32 = 0;
+    let mut score: u32 = 0;
     let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 5).expect("Illegal sizes");
     draw_field(&field, &term.cursor);
 
@@ -153,7 +153,7 @@ fn draw_field(field: &Field<char>, cursor: &TerminalCursor) {
     }
 }
 
-fn update(points: LinkedList<(logic::field::Point, char)>, score: i32, cursor: &TerminalCursor) {
+fn update(points: LinkedList<(logic::field::Point, char)>, score: u32, cursor: &TerminalCursor) {
     for (point, chr) in points {
         let res = cursor.goto(point.0 as u16, point.1 as u16);
         if res.is_ok() {
