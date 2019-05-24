@@ -129,33 +129,46 @@ fn main() {
             None => { if dir.is_some() { end = true; } }
         }
     }
+
+    term.cursor.show();
+    RawScreen::disable_raw_mode().unwrap();
 }
 
 fn draw_field(field: &Field<char>, cursor: &TerminalCursor) {
     for (y, col) in field.get_field().iter().enumerate() {
         for (x, item) in col.iter().enumerate() {
             let item = *item;
-            cursor.goto(x as u16, y as u16);
-            print!("{}", item);
+            let res = cursor.goto(x as u16, y as u16);
+            if res.is_ok() {
+                print!("{}", item);
+            }
         }
     }
 }
 
 fn update(points: LinkedList<(logic::field::Point, char)>, score: i32, cursor: &TerminalCursor) {
     for (point, chr) in points {
-        cursor.goto(point.0 as u16, point.1 as u16);
-        print!("{}", chr);
+        let res = cursor.goto(point.0 as u16, point.1 as u16);
+        if res.is_ok() {
+            print!("{}", chr);
+        }
     }
     let score: &str = &score.to_string()[0..];
-    cursor.goto(0, 0);
-    print!("{}", score);
+    let res = cursor.goto(0, 0);
+    if res.is_ok() {
+        print!("{}", score);
+    }
 }
 
 fn init(term: &mut Term) -> Bounds {
 
     // setup crossterm
-    term.cursor.hide();
-    term.terminal.clear(ClearType::All);
+    let res = term.cursor.hide();
+    res.unwrap(); // panic as this application does not make sense if the terminal doesn't work
+
+    let res = term.terminal.clear(ClearType::All);
+    res.unwrap(); // panic as this application does not make sense if the terminal doesn't work
+
 
     let (width, height) = term.terminal.terminal_size();
     let bounds = Bounds {
