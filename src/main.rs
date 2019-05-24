@@ -16,11 +16,17 @@ struct Bounds {
     row: u16
 }
 
+
 struct Term {
-    screen: RawScreen,
     cursor: TerminalCursor,
     input: TerminalInput,
     terminal: Terminal,
+
+    // need to save all even if they are not used. Else crossterm fails to work.
+    #[allow(dead_code)]
+    screen: RawScreen,
+    #[allow(dead_code)]
+    crossterm: Crossterm,
 }
 
 impl Term {
@@ -28,10 +34,11 @@ impl Term {
         let crossterm = Crossterm::new();
 
         Term {
+            cursor: crossterm.cursor(),
+            input: crossterm.input(),
+            terminal: crossterm.terminal(),
             screen: RawScreen::into_raw_mode().unwrap(),
-            cursor: crossterm::cursor(),
-            input: crossterm::input(),
-            terminal: crossterm::terminal(),
+            crossterm,
         }
     }
 }
@@ -130,7 +137,7 @@ fn main() {
         }
     }
 
-    term.cursor.show();
+    term.cursor.show().unwrap();
     RawScreen::disable_raw_mode().unwrap();
 }
 
