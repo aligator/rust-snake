@@ -57,13 +57,15 @@ fn main() {
 
     let mut last: Option<Direction> = None;
 
+    let stdin = &mut term.input.read_async();
+
     while !end
     {
         let speed: u64 = 200 - score as u64 * 2;
         let speed: u64 = if speed < 150 {150} else {speed};
         thread::sleep(time::Duration::from_millis(speed));
 
-        let mut dir = read_direction(&mut term.input.read_async());
+        let mut dir = read_direction(stdin);
 
         if dir.is_some() {
             last = dir.clone();
