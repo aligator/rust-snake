@@ -2,7 +2,6 @@ extern crate crossterm;
 
 use std::{thread, time};
 use std::collections::LinkedList;
-use std::sync::{Arc, Mutex};
 
 use crossterm::*;
 
@@ -15,7 +14,6 @@ struct Bounds {
     col: u16,
     row: u16
 }
-
 
 struct Term {
     cursor: TerminalCursor,
@@ -86,6 +84,7 @@ fn main() {
             None => { if dir.is_some() { end = true; } }
         }
     }
+    draw_score(&mut term);
 
     term.cursor.show().unwrap();
     RawScreen::disable_raw_mode().unwrap();
@@ -147,4 +146,35 @@ fn init(term: &mut Term) -> Bounds {
     };
 
     return bounds
+}
+
+fn draw_score(term: &mut Term) {
+    term.terminal.clear(ClearType::All);
+
+    const margin: (u16, u16) = (4, 4);
+    const height: u16 = 6;
+
+    let lineLen = term.terminal.terminal_size().0 - margin.0;
+    let mut line = String::from("*");
+
+    for _ in 0..lineLen {
+        line += "*";
+    }
+    let goto = term.cursor.goto(margin.0 / 2, margin.1 / 2);
+    
+    if goto.is_ok() {
+        print!("{}", line);
+    }
+
+    for n in 0..height {
+        let goto = term.cursor.goto(margin.0 / 2, margin.1 / 2 + n);
+        if goto.is_ok() {
+            print!("{}", "*");
+        }
+    }
+    println!();
+    
+    term.cursor.move_right(margin.0 / 2);
+    print!("{}", line);
+    
 }
