@@ -53,36 +53,6 @@ fn main() {
     let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 5).expect("Illegal sizes");
     draw_field(&field, &term.cursor);
 
-
-    // input-loop
-    let input = term.input; // prevent move of term into closure
-    let ch = Arc::new(Mutex::new(KeyEvent::Delete));
-    {
-        let ch = Arc::clone(&ch);
-
-        thread::spawn(move || {
-            loop {
-                thread::sleep(time::Duration::from_millis(50));
-
-                let mut stdin = input.read_sync();
-
-                if let Some(key_event) = stdin.next() {
-                    match key_event {
-                        InputEvent::Keyboard(event) => {
-                            let new_key_event = event;
-
-                            let mut ch_ptr = ch.lock().unwrap();
-                            *ch_ptr = new_key_event;
-                        },
-                        _ => {}
-                    }
-                }
-
-
-            }
-        });
-    }
-
     let mut end = false;
 
     let mut last: Option<Direction> = None;
@@ -93,29 +63,7 @@ fn main() {
         let speed: u64 = if speed < 150 {150} else {speed};
         thread::sleep(time::Duration::from_millis(speed));
 
-        let ch = ch.try_lock();
-
-        let mut dir = match ch {
-            Ok(m) => {
-                match *m {
-                    KeyEvent::Left => {
-                        Some(Direction::LEFT)
-                    },
-                    KeyEvent::Right => {
-                        Some(Direction::RIGHT)
-                    },
-                    KeyEvent::Up => {
-                        Some(Direction::UP)
-                    },
-                    KeyEvent::Down => {
-                        Some(Direction::DOWN)
-                    },
-                    _ => None
-                }
-
-            },
-            _ => None
-        };
+        let mut dir = read_direction(&mut term.input.read_async());
 
         if dir.is_some() {
             last = dir.clone();
@@ -151,6 +99,19 @@ fn draw_field(field: &Field<char>, cursor: &TerminalCursor) {
             }
         }
     }
+}
+
+fn read_direction(input: &mut AsyncReader) -> Option<Direction> {
+    if let Some(InputEvent::Keyboard(key)) = input.next() {
+        return match key {
+            KeyEvent::Up => Some(Direction::UP),
+            KeyEvent::Down => Some(Direction::UP),
+            KeyEvent::Left => Some(Direction::LEFT),
+            KeyEvent::Right => Some(Direction::RIGHT),
+            _ => None
+        };
+    }
+    None
 }
 
 fn update(points: LinkedList<(logic::field::Point, char)>, score: u32, cursor: &TerminalCursor) {
