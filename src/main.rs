@@ -84,7 +84,7 @@ fn main() {
             None => { if dir.is_some() { end = true; } }
         }
     }
-    draw_score(&mut term);
+    draw_score(&mut term, score);
 
     term.cursor.show().unwrap();
     RawScreen::disable_raw_mode().unwrap();
@@ -148,31 +148,58 @@ fn init(term: &mut Term) -> Bounds {
     bounds
 }
 
-fn draw_score(term: &mut Term) {
+fn draw_score(term: &mut Term, score: u32) {
     term.terminal.clear(ClearType::All);
 
+    // the margin around the box (x, y).
     const margin: (u16, u16) = (4, 4);
+    // the height of the box.
     const height: u16 = 6;
 
+    // the length of the upper border.
     let lineLen = term.terminal.terminal_size().0 - margin.0;
     let mut line = String::from("*");
 
+    // build the upper border with the specified length.
     for _ in 0..lineLen {
         line += "*";
     }
     let goto = term.cursor.goto(margin.0 / 2, margin.1 / 2);
     
+    // draw the upper border.
     if goto.is_ok() {
         print!("{}", line);
     }
 
-    for n in 0..height {
-        let goto = term.cursor.goto(margin.0 / 2, margin.1 / 2 + n);
+    let title = String::from("GAME OVER!");
+    let text = format!("Your Score: {}", score);
+
+    for n in 0..height + 1 {
+        let x = margin.0 / 2;
+        let y = margin.1 / 2 + n;
+        let goto = term.cursor.goto(x, y);
         
         if goto.is_ok() {
             print!("{}", "*");
         }
-        let goto = term.cursor.goto((margin.0 / 2) + lineLen, margin.1 / 2 + n);
+
+        // check if we are in the middle of the box if so, insert the text
+        if n == (height / 2) {
+            let x = (lineLen / 2) - (title.chars().count() as u16 / 2);
+            let goto = term.cursor.goto(x, y);
+            
+            if goto.is_ok() {
+                println!("{}", title);
+            }
+            let x = (lineLen / 2) - (text.chars().count() as u16 / 2);
+            let goto = term.cursor.goto(x, y + 1);
+
+            if goto.is_ok() {
+                print!("{}", text);
+            }
+        }
+
+        let goto = term.cursor.goto(x + lineLen, y);
         
         if goto.is_ok() {
             print!("{}", "*");
