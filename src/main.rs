@@ -11,7 +11,7 @@ use logic::field::Field;
 mod logic;
 
 struct Bounds {
-    col: u16,
+    col: u16, 
     row: u16
 }
 
@@ -145,7 +145,7 @@ fn init(term: &mut Term) -> Bounds {
         row: height,
     };
 
-    return bounds
+    bounds
 }
 
 fn draw_score(term: &mut Term) {
@@ -168,6 +168,12 @@ fn draw_score(term: &mut Term) {
 
     for n in 0..height {
         let goto = term.cursor.goto(margin.0 / 2, margin.1 / 2 + n);
+        
+        if goto.is_ok() {
+            print!("{}", "*");
+        }
+        let goto = term.cursor.goto((margin.0 / 2) + lineLen, margin.1 / 2 + n);
+        
         if goto.is_ok() {
             print!("{}", "*");
         }
