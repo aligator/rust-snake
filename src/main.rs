@@ -149,7 +149,7 @@ fn init(term: &mut Term) -> Bounds {
 }
 
 fn draw_score(term: &mut Term, score: u32) {
-    let _ = term.terminal.clear(ClearType::All);
+    term.terminal.clear(ClearType::All).unwrap();
 
     // the margin around the box (x, y).
     const MARGIN: (u16, u16) = (4, 4);
@@ -205,9 +205,14 @@ fn draw_score(term: &mut Term, score: u32) {
             print!("{}", "*");
         }
     }
-    println!();
-    
-    term.cursor.move_right(MARGIN.0 / 2);
-    print!("{}", line);
-    
+
+    let goto = term.cursor.goto(MARGIN.0 / 2, HEIGHT + 1 + MARGIN.1 / 2);
+
+    if goto.is_ok() {
+        print!("{}", line);
+
+        for _ in 0..MARGIN.1 / 2 {
+            println!();
+        }
+    }
 }
