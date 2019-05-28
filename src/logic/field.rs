@@ -6,7 +6,7 @@ use logic::field::rand::distributions::IndependentSample;
 
 #[derive(Copy, Debug)]
 pub enum Direction {
-    LEFT, RIGHT, UP, DOWN
+    Left, Right, Up, Down
 }
 
 impl Clone for Direction {
@@ -137,10 +137,10 @@ impl<T:Clone> Field<T> {
 
         let (move_ok, score) = match dir {
 
-            Some(Direction::LEFT) => self.snake.move_left(self.width as i32, self.height as i32),
-            Some(Direction::RIGHT) => self.snake.move_right(self.width as i32, self.height as i32),
-            Some(Direction::UP) => self.snake.move_up(self.width as i32, self.height as i32),
-            Some(Direction::DOWN) => self.snake.move_down(self.width as i32, self.height as i32),
+            Some(Direction::Left) => self.snake.move_left(self.width as i32, self.height as i32),
+            Some(Direction::Right) => self.snake.move_right(self.width as i32, self.height as i32),
+            Some(Direction::Up) => self.snake.move_up(self.width as i32, self.height as i32),
+            Some(Direction::Down) => self.snake.move_down(self.width as i32, self.height as i32),
             None => self.snake.move_last(self.width as i32, self.height as i32),
         };
 

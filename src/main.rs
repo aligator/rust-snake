@@ -2,7 +2,6 @@ extern crate crossterm;
 
 use std::{thread, time};
 use std::collections::LinkedList;
-use std::sync::{Arc, Mutex};
 
 use crossterm::*;
 
@@ -12,10 +11,9 @@ use logic::field::Field;
 mod logic;
 
 struct Bounds {
-    col: u16,
+    col: u16, 
     row: u16
 }
-
 
 struct Term {
     cursor: TerminalCursor,
@@ -53,39 +51,11 @@ fn main() {
     let mut field = Field::new(bounds.col as usize, bounds.row  as usize, ' ', 'X', 'O', 'G', 5).expect("Illegal sizes");
     draw_field(&field, &term.cursor);
 
-
-    // input-loop
-    let input = term.input; // prevent move of term into closure
-    let ch = Arc::new(Mutex::new(KeyEvent::Delete));
-    {
-        let ch = Arc::clone(&ch);
-
-        thread::spawn(move || {
-            loop {
-                thread::sleep(time::Duration::from_millis(50));
-
-                let mut stdin = input.read_sync();
-
-                if let Some(key_event) = stdin.next() {
-                    match key_event {
-                        InputEvent::Keyboard(event) => {
-                            let new_key_event = event;
-
-                            let mut ch_ptr = ch.lock().unwrap();
-                            *ch_ptr = new_key_event;
-                        },
-                        _ => {}
-                    }
-                }
-
-
-            }
-        });
-    }
-
     let mut end = false;
 
     let mut last: Option<Direction> = None;
+
+    let stdin = &mut term.input.read_async();
 
     while !end
     {
@@ -93,29 +63,7 @@ fn main() {
         let speed: u64 = if speed < 150 {150} else {speed};
         thread::sleep(time::Duration::from_millis(speed));
 
-        let ch = ch.try_lock();
-
-        let mut dir = match ch {
-            Ok(m) => {
-                match *m {
-                    KeyEvent::Left => {
-                        Some(Direction::LEFT)
-                    },
-                    KeyEvent::Right => {
-                        Some(Direction::RIGHT)
-                    },
-                    KeyEvent::Up => {
-                        Some(Direction::UP)
-                    },
-                    KeyEvent::Down => {
-                        Some(Direction::DOWN)
-                    },
-                    _ => None
-                }
-
-            },
-            _ => None
-        };
+        let mut dir = read_direction(stdin);
 
         if dir.is_some() {
             last = dir.clone();
@@ -136,6 +84,7 @@ fn main() {
             None => { if dir.is_some() { end = true; } }
         }
     }
+    draw_score(&mut term, score);
 
     term.cursor.show().unwrap();
     RawScreen::disable_raw_mode().unwrap();
@@ -151,6 +100,19 @@ fn draw_field(field: &Field<char>, cursor: &TerminalCursor) {
             }
         }
     }
+}
+
+fn read_direction(input: &mut AsyncReader) -> Option<Direction> {
+    if let Some(InputEvent::Keyboard(key)) = input.last() {
+        return match key {
+            KeyEvent::Up => Some(Direction::Up),
+            KeyEvent::Down => Some(Direction::Down),
+            KeyEvent::Left => Some(Direction::Left),
+            KeyEvent::Right => Some(Direction::Right),
+            _ => None
+        };
+    }
+    None
 }
 
 fn update(points: LinkedList<(logic::field::Point, char)>, score: u32, cursor: &TerminalCursor) {
@@ -183,5 +145,74 @@ fn init(term: &mut Term) -> Bounds {
         row: height,
     };
 
-    return bounds
+    bounds
+}
+
+fn draw_score(term: &mut Term, score: u32) {
+    term.terminal.clear(ClearType::All).unwrap();
+
+    // the margin around the box (x, y).
+    const MARGIN: (u16, u16) = (4, 4);
+    // the height of the box.
+    const HEIGHT: u16 = 6;
+
+    // the length of the upper border.
+    let line_length = term.terminal.terminal_size().0 - MARGIN.0;
+    let mut line = String::from("*");
+
+    // build the upper border with the specified length.
+    for _ in 0..line_length {
+        line += "*";
+    }
+    let goto = term.cursor.goto(MARGIN.0 / 2, MARGIN.1 / 2);
+    
+    // draw the upper border.
+    if goto.is_ok() {
+        print!("{}", line);
+    }
+
+    let title = String::from("GAME OVER!");
+    let text = format!("Your Score: {}", score);
+
+    for n in 0..HEIGHT + 1 {
+        let x = MARGIN.0 / 2;
+        let y = MARGIN.1 / 2 + n;
+        let goto = term.cursor.goto(x, y);
+        
+        if goto.is_ok() {
+            print!("{}", "*");
+        }
+
+        // check if we are in the middle of the box if so, insert the text
+        if n == (HEIGHT / 2) {
+            let x = (line_length / 2) - (title.chars().count() as u16 / 2);
+            let goto = term.cursor.goto(x, y);
+            
+            if goto.is_ok() {
+                println!("{}", title);
+            }
+            let x = (line_length / 2) - (text.chars().count() as u16 / 2);
+            let goto = term.cursor.goto(x, y + 1);
+
+            if goto.is_ok() {
+                print!("{}", text);
+            }
+        }
+
+        let goto = term.cursor.goto(x + line_length, y);
+        
+        if goto.is_ok() {
+            print!("{}", "*");
+        }
+    }
+
+    let goto = term.cursor.goto(MARGIN.0 / 2, HEIGHT + 1 + MARGIN.1 / 2);
+
+    if goto.is_ok() {
+        print!("{}", line);
+
+        for _ in 0..MARGIN.1 / 2 {
+            println!();
+        }
+    }
 }
