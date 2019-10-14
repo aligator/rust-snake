@@ -105,10 +105,10 @@ fn draw_field(field: &Field<char>, cursor: &TerminalCursor) {
 fn read_direction(input: &mut AsyncReader) -> Option<Direction> {
     if let Some(InputEvent::Keyboard(key)) = input.last() {
         return match key {
-            KeyEvent::Up => Some(Direction::Up),
-            KeyEvent::Down => Some(Direction::Down),
-            KeyEvent::Left => Some(Direction::Left),
-            KeyEvent::Right => Some(Direction::Right),
+            KeyEvent::Char('w') => Some(Direction::Up),
+            KeyEvent::Char('s') => Some(Direction::Down),
+            KeyEvent::Char('a') => Some(Direction::Left),
+            KeyEvent::Char('d') => Some(Direction::Right),
             _ => None
         };
     }
