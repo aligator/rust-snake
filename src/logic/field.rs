@@ -203,11 +203,12 @@ mod util {
 
 #[cfg(test)]
 mod field_test {
-    use logic::Field;
+    use logic::field::Field;
 
     #[test]
     fn new_field() {
-        let field = Field::new(3, 5, false);
+        let field = Field::new(3, 5, ' ', 'X', 'O', 'G', 5);
+        let field = field.unwrap();
         let field = field.get_field();
 
 
@@ -217,7 +218,7 @@ mod field_test {
         for col in field.iter() {
             for item in col.iter() {
                 let item = *item;
-                assert_eq!(false, item); // test if everything is false
+                assert_eq!(' ', item); // test if everything is ' '
             }
         }
     }
@@ -225,32 +226,32 @@ mod field_test {
     #[test]
     #[should_panic(expected = "index out of bounds: the len is 5 but the index is 5")]
     fn set_get_point_test() {
-        let mut field = Field::new(3, 5, false);
+        let mut field = Field::new(3, 5, ' ', 'X', 'O', 'G', 5).unwrap();
 
-        field.set_point(0,0,true);
-        assert_eq!(true, *field.get_point(0,0));
+        field.set_point(0,0,'k');
+        assert_eq!('k', *field.get_point(0,0));
 
-        field.set_point(2,4,true);
-        assert_eq!(true, *field.get_point(2,4));
+        field.set_point(2,4,'k');
+        assert_eq!('k', *field.get_point(2,4));
 
 
-        field.set_point(3,5,true);
+        field.set_point(3,5,'k');
     }
 
     #[test]
     fn reset_field_test() {
-        let mut field = Field::new(3, 5, false);
+        let mut field = Field::new(3, 5, ' ', 'X', 'O', 'G', 5).unwrap();
 
-        field.set_point(0,0,true);
-        field.set_point(1,3,true);
-        field.set_point(2,4,true);
+        field.set_point(0,0,'k');
+        field.set_point(1,3,'k');
+        field.set_point(2,4,'k');
 
         field.reset_field();
 
         for col in field.get_field().iter() {
             for item in col.iter() {
                 let item = *item;
-                assert_eq!(false, item); // test if everything is false
+                assert_eq!(' ', item); // test if everything is false
             }
         }
     }

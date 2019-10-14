@@ -151,11 +151,11 @@ impl Snake {
 
 #[cfg(test)]
 mod field_test {
-    use logic::Snake;
+    use logic::snake::Snake;
 
     #[test]
     fn new_test() {
-        let mut snake = Snake::new(3, (2, 2), 1, 0);
+        let snake = Snake::new(3, (2, 2), 1, 0);
 
         assert_eq!((4, 2), *snake.get_head());
         assert_eq!((3, 2), *snake.get_head());

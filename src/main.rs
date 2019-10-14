@@ -139,7 +139,7 @@ fn init(term: &mut Term) -> Bounds {
     res.unwrap(); // panic as this application does not make sense if the terminal doesn't work
 
 
-    let (width, height) = term.terminal.terminal_size();
+    let (width, height) = term.terminal.size().unwrap(); // panic as we need the size for a working game
     let bounds = Bounds {
         col: width,
         row: height,
@@ -157,7 +157,7 @@ fn draw_score(term: &mut Term, score: u32) {
     const HEIGHT: u16 = 6;
 
     // the length of the upper border.
-    let line_length = term.terminal.terminal_size().0 - MARGIN.0;
+    let line_length = term.terminal.size().unwrap().0 - MARGIN.0;
     let mut line = String::from("*");
 
     // build the upper border with the specified length.
